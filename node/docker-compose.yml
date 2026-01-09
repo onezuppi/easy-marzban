@@ -1,0 +1,55 @@
+services:
+  caddy:
+    image: caddy:latest
+    restart: always
+    container_name: caddy-node
+    environment:
+      - ACME_AGREE=true
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./www:/srv/www:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+
+  marzban-node-2:
+    image: gozargah/marzban-node:latest
+    restart: always
+    volumes:
+      - ./marzban-node:/var/lib/marzban-node
+    ports:
+      - "62050:62050"
+      - "62051:62051"
+    environment:
+      SSL_CLIENT_CERT_FILE: "/var/lib/marzban-node/ssl_client_cert.pem"
+      SERVICE_PORT: 62050
+      XRAY_API_PORT: 62051
+      SERVICE_PROTOCOL: rest
+    networks:
+      - edge
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+    networks:
+      - edge
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  edge:
+    driver: bridge
+

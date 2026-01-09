@@ -1,0 +1,12 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	rewrite * /__force_404__.does-not-exist
+	file_server
+
+	handle_errors {
+		root * /srv/www
+		rewrite * /404.html
+		file_server
+	}
+}
